@@ -8,9 +8,9 @@
 #include "../include/utils.h"
 
 // Matrix dimensions
-#define M 16384  
-#define K 4096   
-#define N 16384  
+#define M 16384
+#define K 4096
+#define N 16384
 #define NUM_RUNS 25
 
 int main() {
@@ -62,7 +62,7 @@ int main() {
     float transfer_back_time = time_memory_transfer_back(h_C, d_C, size_c);
     printf("Memory transfer from device time: %f ms\n", transfer_back_time);
 
-    spot_check(h_A, h_B, h_C, M, N, K);
+    spot_check(h_A, h_B, h_bias, h_C, M, N, K);
 
     free(h_bias);
     CHECK_HIP(hipFree(d_bias));
