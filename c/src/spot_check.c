@@ -5,33 +5,46 @@
 #include "../include/spot_check.h"
 
 void spot_check(const float *A, const float *B, const float *C_gpu, int m, int n, int k) {
-    printf("Performing random spot checks between CPU and GPU results...\n");
-    srand(time(NULL));
-    int mismatch_count = 0;
+   printf("\nPerforming %d random spot checks between CPU and GPU results...\n", NUM_SPOT_CHECKS);
+   srand(time(NULL));
 
-    for (int i = 0; i < NUM_SPOT_CHECKS; ++i) {
-        int row = rand() % m;
-        int col = rand() % n;
-        
-        float sum = 0.0f;
-        for (int j = 0; j < k; ++j) {
-            sum += A[row * k + j] * B[j * n + col];
-        }
+   // First transpose C_gpu from column-major to row-major for easier comparison
+   float *C_gpu_transposed = (float *)malloc(m * n * sizeof(float));
+   for(int i = 0; i < m; i++) {
+       for(int j = 0; j < n; j++) {
+           C_gpu_transposed[i * n + j] = C_gpu[j * m + i];
+       }
+   }
 
-        float gpu_value = C_gpu[row * n + col];
-        float abs_error = fabsf(sum - gpu_value);
-        float rel_error = abs_error / (fabsf(sum) + 1e-8f);
+   int mismatch_count = 0;
+   for(int check = 0; check < NUM_SPOT_CHECKS; check++) {
+       int row = rand() % m;
+       int col = rand() % n;
 
-        if (rel_error > 1e-4f) {
-            printf("Mismatch at C[%d, %d]: Expected = %.6e, GPU = %.6e, Relative Error = %.6e\n", 
-                   row, col, sum, gpu_value, rel_error);
-            mismatch_count++;
-        }
-    }
+       // Calculate single element on CPU
+       float cpu_val = 0.0f;
+       for(int p = 0; p < k; p++) {
+           float a_val = A[row * k + p];
+           float b_val = B[p * n + col];
+           cpu_val += a_val * b_val;
+       }
 
-    if (mismatch_count == 0) {
-        printf("Success: All %d spot checks passed within the relative error threshold.\n", NUM_SPOT_CHECKS);
-    } else {
-        printf("Found %d mismatches out of %d spot checks.\n", mismatch_count, NUM_SPOT_CHECKS);
-    }
+       float gpu_val = C_gpu_transposed[row * n + col];
+       float rel_error = fabsf(cpu_val - gpu_val) / (fabsf(cpu_val) + 1e-8f);
+
+       if(rel_error > 1e-3f) {
+           printf("Error at C[%d,%d]: CPU = %.12f, GPU = %.12f, Rel Error = %.12f\n",
+                  row, col, cpu_val, gpu_val, rel_error);
+           mismatch_count++;
+       }
+   }
+
+   free(C_gpu_transposed);
+
+   if(mismatch_count == 0) {
+       printf("\nValidation PASSED - All %d random spot checks match\n", NUM_SPOT_CHECKS);
+   } else {
+       printf("\nValidation FAILED - %d elements out of %d spot checks don't match\n",
+              mismatch_count, NUM_SPOT_CHECKS);
+   }
 }

@@ -24,7 +24,7 @@ void transpose_matrix(const float *src, float *dst, int rows, int cols) {
     }
 }
 
-void perform_matrix_multiplication(rocblas_handle handle, float *d_A, float *d_B, float *d_C, 
+void perform_matrix_multiplication(rocblas_handle handle, float *d_A, float *d_B, float *d_C,
                                  int m, int n, int k, int NUM_RUNS) {
     const float alpha = 1.0f;
     const float beta = 0.0f;

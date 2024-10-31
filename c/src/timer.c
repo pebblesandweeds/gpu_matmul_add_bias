@@ -1,25 +1,25 @@
 #include "../include/timer.h"
 #include "../include/utils.h"
 
-float time_memory_transfer(const float *h_A, const float *h_B, float *d_A, float *d_B, 
+float time_memory_transfer(const float *h_A, const float *h_B, float *d_A, float *d_B,
                          size_t size_a, size_t size_b) {
     hipEvent_t start, stop;
     float transfer_time;
 
     CHECK_HIP(hipEventCreate(&start));
     CHECK_HIP(hipEventCreate(&stop));
-    
+
     CHECK_HIP(hipEventRecord(start));
     CHECK_HIP(hipMemcpy(d_A, h_A, size_a, hipMemcpyHostToDevice));
     CHECK_HIP(hipMemcpy(d_B, h_B, size_b, hipMemcpyHostToDevice));
     CHECK_HIP(hipEventRecord(stop));
     CHECK_HIP(hipEventSynchronize(stop));
-    
+
     CHECK_HIP(hipEventElapsedTime(&transfer_time, start, stop));
-    
+
     CHECK_HIP(hipEventDestroy(start));
     CHECK_HIP(hipEventDestroy(stop));
-    
+
     return transfer_time;
 }
 

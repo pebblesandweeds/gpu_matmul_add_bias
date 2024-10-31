@@ -1,44 +1,44 @@
-#include "../include/timer.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include "../include/utils.h"
 
-float time_memory_transfer(const float *h_A, const float *h_B, float *d_A, float *d_B, 
-                         size_t size_a, size_t size_b) {
-    hipEvent_t start, stop;
-    float transfer_time;
-
-    CHECK_HIP(hipEventCreate(&start));
-    CHECK_HIP(hipEventCreate(&stop));
-    
-    CHECK_HIP(hipEventRecord(start));
-    CHECK_HIP(hipMemcpy(d_A, h_A, size_a, hipMemcpyHostToDevice));
-    CHECK_HIP(hipMemcpy(d_B, h_B, size_b, hipMemcpyHostToDevice));
-    CHECK_HIP(hipEventRecord(stop));
-    CHECK_HIP(hipEventSynchronize(stop));
-    
-    CHECK_HIP(hipEventElapsedTime(&transfer_time, start, stop));
-    
-    CHECK_HIP(hipEventDestroy(start));
-    CHECK_HIP(hipEventDestroy(stop));
-    
-    return transfer_time;
+void print_gpu_info() {
+    hipDevice_t device;
+    hipDeviceProp_t props;
+    CHECK_HIP(hipGetDevice(&device));
+    CHECK_HIP(hipGetDeviceProperties(&props, device));
+    printf("GPU: %s\n", props.name);
+    printf("Total GPU memory: %zu MB\n", props.totalGlobalMem / (1024 * 1024));
+    printf("GPU clock rate: %d MHz\n", props.clockRate / 1000);
 }
 
-float time_memory_transfer_back(float *h_C, float *d_C, size_t size) {
-    hipEvent_t start, stop;
-    float transfer_back_time;
+void print_precision() {
+    printf("Matrix Element Precision: %s\n", get_precision_string(sizeof(float)));
+    printf("rocBLAS Function: rocblas_sgemm (Single Precision)\n");
+}
 
-    CHECK_HIP(hipEventCreate(&start));
-    CHECK_HIP(hipEventCreate(&stop));
+const char* get_precision_string(size_t size) {
+    switch(size) {
+        case sizeof(float):
+            return "Single Precision (32-bit)";
+        case sizeof(double):
+            return "Double Precision (64-bit)";
+        default:
+            return "Unknown Precision";
+    }
+}
 
-    CHECK_HIP(hipEventRecord(start));
-    CHECK_HIP(hipMemcpy(h_C, d_C, size, hipMemcpyDeviceToHost));
-    CHECK_HIP(hipEventRecord(stop));
-    CHECK_HIP(hipEventSynchronize(stop));
-
-    CHECK_HIP(hipEventElapsedTime(&transfer_back_time, start, stop));
-
-    CHECK_HIP(hipEventDestroy(start));
-    CHECK_HIP(hipEventDestroy(stop));
-
-    return transfer_back_time;
+void cleanup(rocblas_handle handle, float *d_A, float *d_B, float *d_C,
+            float *h_A, float *h_B, float *h_C,
+            float *h_A_trans, float *h_B_trans, float *h_C_trans) {
+    CHECK_ROCBLAS(rocblas_destroy_handle(handle));
+    CHECK_HIP(hipFree(d_A));
+    CHECK_HIP(hipFree(d_B));
+    CHECK_HIP(hipFree(d_C));
+    free(h_A);
+    free(h_B);
+    free(h_C);
+    free(h_A_trans);
+    free(h_B_trans);
+    free(h_C_trans);
 }
