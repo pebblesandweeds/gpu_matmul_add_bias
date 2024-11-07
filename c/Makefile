@@ -1,6 +1,6 @@
 CC = hipcc
 CFLAGS = -I./include -D__HIP_PLATFORM_AMD__=1 -x hip
-LDFLAGS = -lrocblas
+LDFLAGS = -lrocblas -lhipblaslt
 SRC_DIR = src
 OBJ_DIR = obj
 SOURCES = $(wildcard $(SRC_DIR)/*.c)

@@ -47,4 +47,3 @@ void spot_check(const float *A, const float *B, const float *bias, const float *
                mismatch_count, NUM_SPOT_CHECKS);
     }
 }
-~     

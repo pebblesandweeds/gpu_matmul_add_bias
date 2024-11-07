@@ -19,6 +19,13 @@
         exit(1);                                             \
     }                                                        \
 } while(0)
+#define CHECK_HIPBLASLT_ERROR(stmt) do {                     \
+    hipblasStatus_t status = stmt;                           \
+    if (status != HIPBLAS_STATUS_SUCCESS) {                  \
+        printf("hipblasLt error: %d\n", status);             \
+        exit(1);                                             \
+    }                                                        \
+} while(0)
 
 void print_gpu_info();
 void print_precision();
